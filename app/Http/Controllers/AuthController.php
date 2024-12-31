@@ -8,6 +8,7 @@ use App\Models\Admin;
 use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\Token;
+use App\Services\OtpService;
 use Illuminate\Support\Str;
 use App\Mail\VerifikasiAkun;
 use Illuminate\Http\Request;
@@ -18,8 +19,9 @@ use Illuminate\Support\Facades\Artisan;
 
 class AuthController extends Controller
 {
-    public function __construct()
+    public function __construct(OtpService $otpService)
     {
+        $this->otpService = $otpService;
     }
 
     public function index()
@@ -438,6 +440,150 @@ class AuthController extends Controller
                 </script>
             ");
     }
+
+    public function generateOtp(Request $request)
+    {
+
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        $user = Guru::firstWhere('email', $request->email) ??
+                Siswa::firstWhere('email', $request->email);
+
+        if (!$user) {
+            return redirect('/')->with('pesan', "
+                <script>
+                    swal({
+                        title: 'Error!',
+                        text: 'Email tidak ditemukan',
+                        type: 'error',
+                        padding: '2em'
+                    })
+                </script>
+            ");
+        }
+
+        
+        $otp = $this->otpService->generateTOTP();
+
+        $tokens = [
+            'token' => Str::random(40),
+            'email' => $request->email,
+            'key' => 'password',
+            'role' => $user->role
+        ];
+        $details = [
+            'email' => $request->email,
+            'otp' => $otp,
+            'token' => $tokens['token']
+        ];
+
+        
+        session([
+            'otp' => $otp, 
+            'otp_email' => $request->email, 
+            'token' => $tokens['token']
+        ]);
+
+        
+        Mail::to("$request->email")->send(new ForgotPassword($details));
+        Token::create($tokens);
+
+        return redirect('verify_otp')->with('pesan', 'OTP telah dikirim ke email Anda.');
+    }
+
+    public function resendOtp(Request $request)
+    {
+        
+        $request->validate([
+            'email' => 'required|email'
+        ]);
+
+        
+        $user = Guru::firstWhere('email', $request->email) ??
+                Siswa::firstWhere('email', $request->email);
+
+        
+        if (!$user) {
+            return redirect()->back()->with('pesan', "
+                <script>
+                    swal({
+                        title: 'Error!',
+                        text: 'Email tidak ditemukan.',
+                        type: 'error',
+                        padding: '2em'
+                    })
+                </script>
+            ");
+        }
+
+        
+        $otp = $this->otpService->generateTOTP();
+
+        
+        session(['otp' => $otp, 'otp_email' => $request->email]);
+
+        
+        $token = Str::random(40);
+        $tokens = [
+            'token' => $token,
+            'email' => $request->email,
+            'key' => 'password',
+            'role' => $user->role
+        ];
+
+        
+        $details = [
+            'email' => $request->email,
+            'otp' => $otp,
+            'token' => $token
+        ];
+
+        session([
+            'otp' => $otp, 
+            'otp_email' => $request->email, 
+            'token' => $tokens['token']
+        ]);
+
+        
+        Mail::to($request->email)->send(new ForgotPassword($details));
+        Token::create($tokens);
+
+        
+        return redirect('verify_otp')->with('pesan', 'OTP telah dikirim ke email Anda.');
+    }
+
+    public function verifyOtp(Token $token, Request $request)
+    {
+        $request->validate([
+            'otp' => 'required|numeric'
+        ]);
+    
+        
+        $storedOtp = session('otp');
+        $email = session('otp_email');
+        $storedToken = session('token');
+    
+        
+        if ($this->otpService->verifyTOTP($request->otp) && $request->otp == $storedOtp) {
+            
+            if (!$storedToken) {
+                return redirect()->back()->with('pesan', 'Token tidak valid.');
+            }
+            
+            
+            session()->forget(['otp', 'otp_email', 'token']);
+            
+            
+            return redirect("/change_password/{$storedToken}")->with('pesan', 'OTP valid, silakan ubah password Anda.');
+        }
+    
+        
+        return redirect()->back()->with('pesan', 'OTP tidak valid atau sudah kadaluarsa.');
+    }
+
+
     public function change_password(Token $token)
     {
         if ($token->created_at->diffInMinutes() > 60) {
@@ -460,6 +606,7 @@ class AuthController extends Controller
             'token' => $token
         ]);
     }
+    
     public function change_password_(Token $token, Request $request)
     {
         $password = bcrypt($request->password);

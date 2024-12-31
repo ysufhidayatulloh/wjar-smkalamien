@@ -714,7 +714,7 @@
 
                         <h1 class="">Password Recovery</h1>
                         <p class="signup-link">Lupa password?, yasudah masukin email kamu aja dibawah ini</p>
-                        <form action="{{ url("/recovery") }}" method="post" class="text-left">
+                        <form action="{{ url("/generate_otp") }}" method="post" class="text-left">
                             @csrf
                             <div class="form">
                                 <div id="email-field" class="field-wrapper input">

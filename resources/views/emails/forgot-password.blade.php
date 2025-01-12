@@ -14,14 +14,26 @@
             W-JAR
         </div>
         <small style="color: #000;">W-JAR | by UNISKA</small>
-        <p style="font-family: `Segoe UI`, Tahoma, Geneva, Verdana, sans-serif; color: #000;">
+        <!-- <p style="font-family: `Segoe UI`, Tahoma, Geneva, Verdana, sans-serif; color: #000;">
             Silahkan klik tombol dibawah ini untuk melanjutkan. copy url di bawah ini jika tombol tidak bisa di klik
-        </p>
-        <a href="{{ url('/change_password/' . $details['token']) }}" style="display: inline-block; width: 100px; height: 30px; background: #1C3FAA; color: #fff; text-decoration: none; border-radius: 5px; text-align: center; line-height: 30px; font-family: `Segoe UI`, Tahoma, Geneva, Verdana, sans-serif;">
+        </p> -->
+        <!-- <a href="{{ url('/change_password/' . $details['token']) }}" style="display: inline-block; width: 100px; height: 30px; background: #1C3FAA; color: #fff; text-decoration: none; border-radius: 5px; text-align: center; line-height: 30px; font-family: `Segoe UI`, Tahoma, Geneva, Verdana, sans-serif;">
             change password
-        </a>
-        <br>
-        <br>
+        </a> -->
+        <p style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #000;">
+            Berikut adalah kode OTP Anda untuk melanjutkan proses pemulihan password:
+        </p>
+        <br/>
+        <br/>
+        <div style="font-size: 24px; font-weight: bold; color: #1C3FAA; text-align: center; margin: 20px 0;">
+            {{ $details['otp'] }}
+        </div>
+        <br/>
+        <br/>
+        <p style="font-family: `Segoe UI`, Tahoma, Geneva, Verdana, sans-serif; color: #000;">
+            Silahkan klik Link dibawah ini untuk melanjutkan
+
+        </p>
         <a href="{{ url('/change_password/' . $details['token']) }}">
             {{ url('/change_password/' . $details['token']) }}
         </a>

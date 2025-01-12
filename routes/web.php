@@ -37,6 +37,10 @@ Route::get('/install', [AuthController::class, 'install']);
 Route::get('/register', [AuthController::class, 'register']);
 Route::get('/recovery', [AuthController::class, 'recovery']);
 Route::get('/change_password/{token:token}', [AuthController::class, 'change_password']);
+Route::get('/verify_otp', function () {
+    $token = session('token');
+    return view('auth.verify-otp', ['token' => $token]);
+})->name('verify_otp');
 Route::get('/logout', [AuthController::class, 'logout']);
 // ==>Function
 Route::post('/login', [AuthController::class, 'login']);
@@ -45,6 +49,9 @@ Route::post('/register', [AuthController::class, 'register_']);
 Route::post('/recovery', [AuthController::class, 'recovery_']);
 Route::get('/aktivasi/{token:token}', [AuthController::class, 'aktivasi']);
 Route::post('/change_password/{token:token}', [AuthController::class, 'change_password_']);
+Route::post('/generate_otp', [AuthController::class, 'generateOtp']);
+Route::post('/resend_otp', [AuthController::class, 'resendOtp']);
+Route::post('/verify_otp', [AuthController::class, 'verifyOtp'])->name('verify_otp.post');
 
 // START::ROUTE ADMIN
 Route::get('/admin', [AdminController::class, 'index'])->middleware('is_admin');
